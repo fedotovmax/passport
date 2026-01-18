@@ -1,4 +1,4 @@
 # Download
 
-go get github.com/fedotovmax/passport@v1.0.1
+go get github.com/fedotovmax/passport@v1.0.2
 

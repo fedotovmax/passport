@@ -13,39 +13,37 @@ type Config struct {
 	AccessTokenSecret      string
 }
 
-type Adapter struct {
-	config *Config
-}
-
 var ErrInvalidToken = errors.New("invalid token")
 
 var ErrParseClaims = errors.New("error when parse claims")
 
-func New(cfg *Config) *Adapter {
-	return &Adapter{
-		config: cfg,
-	}
+type CreateParms struct {
+	Issuer          string
+	UID             string
+	SID             string
+	Secret          string
+	ExpiresDuration time.Duration
 }
 
-func (a *Adapter) CreateAccessToken(issuer, uid, sid string) (token string, exp time.Time, err error) {
+func CreateAccessToken(params CreateParms) (token string, exp time.Time, err error) {
 
 	const op = "adapter.auth.jwt.CreateAccessToken"
 
 	now := time.Now().UTC()
 
-	exp = now.Add(a.config.AccessTokenExpDuration)
+	exp = now.Add(params.ExpiresDuration)
 
 	accessClaims := jwt.RegisteredClaims{
 		ExpiresAt: jwt.NewNumericDate(exp),
 		IssuedAt:  jwt.NewNumericDate(now),
-		Issuer:    issuer,
-		ID:        sid,
-		Subject:   uid,
+		Issuer:    params.Issuer,
+		ID:        params.SID,
+		Subject:   params.UID,
 	}
 
 	accessTokenObject := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
 
-	token, err = accessTokenObject.SignedString([]byte(a.config.AccessTokenSecret))
+	token, err = accessTokenObject.SignedString([]byte(params.Secret))
 
 	if err != nil {
 		err = fmt.Errorf("%s: %w", op, err)
@@ -57,19 +55,25 @@ func (a *Adapter) CreateAccessToken(issuer, uid, sid string) (token string, exp 
 
 }
 
-func (a *Adapter) ParseAccessToken(token string, issuer string) (jti string, uid string, err error) {
+type VerifyParams struct {
+	Token  string
+	Issuer string
+	Secret string
+}
+
+func ParseAccessToken(params VerifyParams) (jti string, uid string, err error) {
 
 	const op = "adapter.auth.jwt.ParseAccessToken"
 
 	opts := []jwt.ParserOption{
 		jwt.WithExpirationRequired(),
 		jwt.WithIssuedAt(),
-		jwt.WithIssuer(issuer),
+		jwt.WithIssuer(params.Issuer),
 		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
 	}
 
-	result, err := jwt.ParseWithClaims(token, &jwt.RegisteredClaims{}, func(t *jwt.Token) (any, error) {
-		return []byte(a.config.AccessTokenSecret), nil
+	result, err := jwt.ParseWithClaims(params.Token, &jwt.RegisteredClaims{}, func(t *jwt.Token) (any, error) {
+		return []byte(params.Secret), nil
 	}, opts...)
 
 	if err != nil {
