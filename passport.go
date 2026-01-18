@@ -27,7 +27,7 @@ type CreateParms struct {
 
 func CreateAccessToken(params CreateParms) (token string, exp time.Time, err error) {
 
-	const op = "adapter.auth.jwt.CreateAccessToken"
+	const op = "passport.CreateAccessToken"
 
 	now := time.Now().UTC()
 
@@ -61,9 +61,9 @@ type VerifyParams struct {
 	Secret string
 }
 
-func ParseAccessToken(params VerifyParams) (jti string, uid string, err error) {
+func Verify(params VerifyParams) (jti string, uid string, err error) {
 
-	const op = "adapter.auth.jwt.ParseAccessToken"
+	const op = "passport.Verify"
 
 	opts := []jwt.ParserOption{
 		jwt.WithExpirationRequired(),
