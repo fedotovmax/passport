@@ -13,11 +13,6 @@ type Config struct {
 	AccessTokenSecret      string
 }
 
-// type NewToken struct {
-// 	AccessToken   string    `json:"access_token"`
-// 	AccessExpTime time.Time `json:"access_exp_time"`
-// }
-
 type Adapter struct {
 	config *Config
 }
